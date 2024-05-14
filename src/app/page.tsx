@@ -1,112 +1,216 @@
-import Image from "next/image";
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+
+const sentences = [
+  "Солнце светит ярко на небе, заливая все вокруг теплым светом.",
+  "Лес шумит своими зелеными кронами под легким ветерком.",
+  "Дети играют в парке, смеясь и бегая вокруг фонтана.",
+  "Море шумит волнами, разбиваясь о берег с белыми пенными гребнями.",
+  "Горы возвышаются над долиной, словно стражи природы, охраняющие ее от злых сил.",
+  "Воздух наполнен ароматами цветущих полей, создавая волшебное ощущение весеннего вдохновения.",
+  "Городской сквер украшен красочными цветами, привлекая взгляды прохожих своей красотой.",
+  "Птицы чирикают в ветвях деревьев, напоминая о приближении нового дня.",
+  "Вечернее небо расцвечено разноцветными отблесками заката, словно художественное полотно великого мастера.",
+  "Река плывет спокойно и тихо, отражая в своих водах отблески заката и облаков.",
+  "The sun sets behind the mountains, painting the sky with hues of orange and pink.",
+  "A gentle breeze rustles the leaves of the old oak tree, creating a soothing sound.",
+  "Children laugh and play in the meadow, chasing colorful butterflies in the warm summer air.",
+  "The waves crash against the shore, creating a symphony of soothing sounds.",
+  "The city comes alive at night, with neon lights and bustling streets filled with energy.",
+  "The ancient ruins stand as a testament to the glory of a bygone era, intriguing all who visit.",
+  "Birds chirp melodiously as they flit from branch to branch, adding to the peaceful ambiance of the forest.",
+  "The aroma of freshly baked bread wafts through the air, enticing passersby with its comforting scent.",
+  "Stars twinkle in the night sky, forming intricate patterns that have fascinated people for centuries.",
+  "The river flows steadily, reflecting the moonlight like a shimmering ribbon cutting through the landscape.",
+];
+
+export interface StatsType {
+  time: Time
+  symbols: Symbols
+  errors: Errors
+  errorsPercent: ErrorsPercent
+  symbolsPerMinute: SymbolsPerMinute
+}
+
+export interface Time {
+  name: string
+  value: number
+}
+
+export interface Symbols {
+  name: string
+  value: number[]
+}
+
+export interface Errors {
+  name: string
+  value: number[]
+}
+
+export interface ErrorsPercent {
+  name: string
+  value: number
+}
+
+export interface SymbolsPerMinute {
+  name: string
+  value: number
+}
 
 export default function Home() {
+  const textRef = useRef(null);
+  let [currentText, setCurrentText] = useState("");
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [currentSecond, setCurrentSecond] = useState(-1);
+  let [currentKeyIndex, setCurrentKeyIndex] = useState(0);
+
+  let [stats, setStats] = useState<StatsType>({
+    time: { name: "Время ", value: 0 },
+    symbols: { name: "Знаки ", value: [] },
+    errors: { name: "Ошибки ", value: [] },
+    errorsPercent: { name: "Процент ошибок ", value: 0 },
+    symbolsPerMinute: { name: "Знаки в минуту ", value: 0 },
+  });
+
+  useEffect(() => {
+    if (isGameStarted) {
+      setTimeout(() => {
+        stats.time.value = stats.time.value + 0.1;
+        if (stats.errors.value.length != 0) {
+          stats.errorsPercent.value =
+            (  stats.errors.value.length / stats.symbols.value.length ) * 100;
+        }
+
+        stats.symbolsPerMinute.value =
+          stats.symbols.value.length / stats.time.value * 60;
+        if (isGameStarted) {
+          setStats({ ...stats });
+        }
+
+        setCurrentSecond(currentSecond + 1);
+      }, 100);
+    }
+  }, [currentSecond, isGameStarted]);
+
+  useEffect(() => {
+    if (!isGameStarted) {
+      return;
+    }
+    currentText = sentences[Math.floor(Math.random() * sentences.length)];
+    setCurrentText(currentText);
+    //keyhandler end
+  }, [isGameStarted]);
+
+  useEffect(() => {
+    if (currentText === "") {
+      return;
+    }
+
+    function onClick(event: KeyboardEvent) {
+      if (currentKeyIndex == currentText.length - 1) {
+        setIsGameStarted(false);
+        setCurrentKeyIndex(0);
+        setCurrentSecond(-1);
+        window.removeEventListener("keypress", onClick);
+        return;
+      }
+
+      const symbol = currentText[currentKeyIndex];
+
+
+      if (event.key == symbol) {
+        stats.symbols.value.push(currentKeyIndex);
+      } else {
+        stats.symbols.value.push(currentKeyIndex);
+        stats.errors.value.push(currentKeyIndex);
+      }
+
+      setStats({ ...stats });
+
+      currentKeyIndex = currentKeyIndex + 1;
+      setCurrentKeyIndex(currentKeyIndex);
+    }
+
+    //keyhandler start
+    window.addEventListener("keypress", onClick);
+  }, [currentText]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="h-screen max-h-screen text-white">
+      <header className="header p-2 h-1/6">
+        <h1 className=" underline title white text-center text-white font-bold text-5xl md:text-9xl">
+          Starkov
+          <span className="font-italic font-normal text-xl">
+            typing&nbsp;test
+          </span>
+        </h1>
+      </header>
+      <div className="p-8 h-5/6 w-full inline-flex flex-col justify-around">
+        {isGameStarted ? (
+          <>
+            <div className="text-container">
+              <p ref={textRef} className="text-center text-2xl">
+                {currentText.split("").map((item, index) => {
+                  return (
+                    <span
+                      key={index}
+                      className={
+                        (index == currentKeyIndex ? "symbol-current" : "") +
+                   
+                        (stats.symbols.value.includes(index)
+                          ? stats.errors.value.includes(index)
+                            ? "symbol-error"
+                            : "symbol-success"
+                          : "") +
+                        " text-white "
+                      }
+                    >
+                      {item}
+                    </span>
+                  );
+                })}
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="button-container flex h-max">
+            <button
+              className="m-auto start-game-button button p-3 border text-white"
+              onClick={() => {
+                setIsGameStarted(true);
+                setCurrentKeyIndex(0);
+
+                stats = {
+                  time: { name: "Время ", value: 0 },
+                  symbols: { name: "Знаки ", value: [] },
+                  errors: { name: "Ошибки ", value: [] },
+                  errorsPercent: { name: "Процент ошибок ", value: 0 },
+                  symbolsPerMinute: {
+                    name: "Знаки в минуту ",
+                    value: 0,
+                  },
+                };
+                setStats({ ...stats });
+              }}
+            >
+              Начать тест
+            </button>
+          </div>
+        )}
+        <div className="stats-container rounded-md">
+          {Object.values(stats).map((value, index) => {
+            return (
+              <p key={index} className="p-2 gap-4 text-right">
+                <span>{value.name}</span>
+                <span className=" ml-5">
+                  {typeof value.value === "object"
+                    ? value.value.length
+                    : Math.round(parseFloat(value.value) * 100) / 100}
+                </span>
+              </p>
+            );
+          })}
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
       </div>
     </main>
   );
