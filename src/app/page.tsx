@@ -139,7 +139,7 @@ export default function Home() {
     <main className="h-screen max-h-screen text-white">
       <header className="header p-2 h-1/6">
         <h1 className=" underline title white text-center text-white font-bold text-5xl md:text-9xl">
-          Starkov
+          Kutyrev
           <span className="font-italic font-normal text-xl">
             typing&nbsp;test
           </span>
